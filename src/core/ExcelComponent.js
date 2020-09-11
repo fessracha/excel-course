@@ -12,4 +12,7 @@ export class ExcelComponent extends DomListener {
     console.log('init component')
     this.initDOMListeners()
   }
+  destroy() {
+    this.removeDOMListeners()
+  }
 }
