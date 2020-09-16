@@ -3,27 +3,47 @@ import {createTable} from '@/components/table/table.template'
 
 export class Table extends ExcelComponent {
   static className = 'excel__table'
+  $resizeEl = {}
+  isResizible = false
 
   constructor($root) {
     super($root, {
-      listeners: ['click', 'mousedown', 'mousemove']
+      listeners: ['mousedown', 'mousemove', 'mouseup']
     });
   }
 
-  onClick() {
-    console.log('click')
+  onMousedown(event) {
+    this.resizeHandler(event);
   }
 
-  onMousedown() {
-    console.log('mousedown')
+  onMouseup(event) {
+    this.isResizible = false
+    console.log('on mouse up')
   }
 
-  onMousemove() {
-    console.log('mousemove')
+  onMousemove(event) {
+    // console.log(event.target)
+    // if (this.isResizible) {
+    //   const $parent = event.target.parentElement
+    //   $parent.style.width = `${$parent.clientWidth + 1 + event.movementX}px`
+    //   console.log('move resize handler')
+    // }
+    if(this.isResizible) {
+      event.target
+    }
   }
 
-  onMouseup() {
-    console.log('mouseup')
+  resizeHandler(event) {
+    this.$resizeEl = event.target
+    const resizeType = event.target.dataset.resize
+
+    this.isResizible = true
+
+    if (resizeType === 'row') {
+      console.log('resize row')
+    } else if (resizeType === 'col') {
+      console.log('resize col')
+    }
   }
 
   toHTML() {
