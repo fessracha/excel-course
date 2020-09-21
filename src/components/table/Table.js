@@ -1,48 +1,35 @@
 import {ExcelComponent} from '@core/ExcelComponent'
 import {createTable} from '@/components/table/table.template'
+import {$} from '@core/dom.js'
 
 export class Table extends ExcelComponent {
   static className = 'excel__table'
-  $resizeEl = {}
+  $resizeEl = null
   isResizible = false
 
   constructor($root) {
     super($root, {
-      listeners: ['mousedown', 'mousemove', 'mouseup']
+      listeners: ['mousedown', 'mouseup', 'mousemove']
     });
   }
 
   onMousedown(event) {
-    this.resizeHandler(event);
-  }
-
-  onMouseup(event) {
-    this.isResizible = false
-    console.log('on mouse up')
-  }
-
-  onMousemove(event) {
-    // console.log(event.target)
-    // if (this.isResizible) {
-    //   const $parent = event.target.parentElement
-    //   $parent.style.width = `${$parent.clientWidth + 1 + event.movementX}px`
-    //   console.log('move resize handler')
-    // }
-    if(this.isResizible) {
-      event.target
+    if (event.target.dataset.resize) {
+      const $resizer = $(event.target)
+      this.$resizeEl = $resizer.closest('[data-type=resizable]')
+      this.isResizible = true
     }
   }
 
-  resizeHandler(event) {
-    this.$resizeEl = event.target
-    const resizeType = event.target.dataset.resize
+  onMouseup() {
+    console.log('onmouseup')
+    this.isResizible = false
+  }
 
-    this.isResizible = true
-
-    if (resizeType === 'row') {
-      console.log('resize row')
-    } else if (resizeType === 'col') {
-      console.log('resize col')
+  onMousemove(event) {
+    if (this.isResizible) {
+      const delta = event.pageX - this.$resizeEl.getCoords().x
+      this.$resizeEl.$el.style.minWidth = `${delta}px`
     }
   }
 
