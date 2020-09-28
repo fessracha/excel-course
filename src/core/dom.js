@@ -47,9 +47,22 @@ class Dom {
   getCoords() {
     return this.$el.getBoundingClientRect()
   }
+
+  findAll(selector) {
+    return this.$el.querySelectorAll(selector)
+  }
+
+  css(styles = {}) {
+    Object
+        .keys(styles)
+        .forEach(key => this.$el.style[key] = styles[key])
+  }
+
+  get data() {
+    return this.$el.dataset
+  }
 }
 
-// event.target
 export function $(selector) {
   return new Dom(selector)
 }
