@@ -10,22 +10,19 @@ export class Table extends ExcelComponent {
   constructor($root, options) {
     super($root, {
       name: 'Table',
-      listeners: ['mousedown', 'keydown'],
+      listeners: ['mousedown', 'keydown', 'input'],
       ...options
     });
   }
 
   onMousedown = e => {
     if (shouldResize(e)) {
-      // eslint-disable-next-line no-invalid-this
       resizeHandler(this.$root, e)
     } else if (isCell(e)) {
       const $target = $(e.target)
       if (e.shiftKey) {
-        // eslint-disable-next-line no-invalid-this
         this.selection.selectGroup($target)
       } else {
-        // eslint-disable-next-line no-invalid-this
         this.selection.select($target)
       }
     }
@@ -42,16 +39,23 @@ export class Table extends ExcelComponent {
     ]
 
     const {key} = e
+
     // TODO исправь проблему no-invalid-this
     if (keys.includes(key) && !e.shiftKey) {
       e.preventDefault()
-      // eslint-disable-next-line no-invalid-this
       const id = this.selection.current.id(true)
-      // eslint-disable-next-line no-invalid-this
       const $next = this.$root.find(nextSelector(key, id));
-      // eslint-disable-next-line no-invalid-this
-      this.selection.select($next)
+      this.selectCell($next)
     }
+  }
+
+  onInput = e => {
+    this.$emit('table:input', $(e.target))
+  }
+
+  selectCell($cell) {
+    this.selection.select($cell)
+    this.$emit('table:select', $cell)
   }
 
   prepare() {
@@ -63,8 +67,11 @@ export class Table extends ExcelComponent {
     this.$on('formula:input', (text) => {
       this.selection.current.text(text)
     })
+    this.$on('formula:done', (keyCode) => {
+      this.selection.current.focus()
+    })
     const $initCell = this.$root.find(`[data-id="0:0"]`)
-    this.selection.select($initCell)
+    this.selectCell($initCell)
   }
 
   toHTML() {
