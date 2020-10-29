@@ -4,6 +4,7 @@ import {createTable} from '@/components/table/table.template'
 import resizeHandler from '@/components/table/table.resize'
 import {shouldResize, isCell, nextSelector} from './table.functions'
 import {TableSelection} from '@/components/table/TableSelection'
+import * as actions from '@/redux/actions'
 export class Table extends ExcelComponent {
   static className = 'excel__table'
 
@@ -13,12 +14,13 @@ export class Table extends ExcelComponent {
       listeners: ['mousedown', 'keydown', 'input'],
       ...options
     });
+    this.colState = null
   }
 
   async resizeTable(e) {
     try {
       const data = await resizeHandler(this.$root, e)
-      this.$dispatch({type: 'TABLE_RESIZE', data})
+      this.$dispatch(actions.tableResize(data))
     } catch (e) {
       console.warn(e.message)
     }
@@ -49,7 +51,6 @@ export class Table extends ExcelComponent {
 
     const {key} = e
 
-    // TODO исправь проблему no-invalid-this
     if (keys.includes(key) && !e.shiftKey) {
       e.preventDefault()
       const id = this.selection.current.id(true)
@@ -58,38 +59,41 @@ export class Table extends ExcelComponent {
     }
   }
 
-  onInput = e => {
-    this.$emit('table:input', $(e.target))
-  }
-
   selectCell($cell) {
     this.selection.select($cell)
     this.$emit('table:select', $cell)
-    this.$dispatch({ type: 'TEST'})
   }
 
   prepare() {
     this.selection = new TableSelection()
   }
 
+  updateTextInStore(value) {
+    this.$dispatch(actions.changeText({
+      id: this.selection.current.id(),
+      value
+    }))
+  }
+
   init() {
     super.init()
     this.$on('formula:input', (text) => {
       this.selection.current.text(text)
+      this.updateTextInStore(text)
     })
     this.$on('formula:done', (keyCode) => {
       this.selection.current.focus()
     })
     const $initCell = this.$root.find(`[data-id="0:0"]`)
     this.selectCell($initCell)
-
-    this.$subscribe( state => {
-      console.log('TableState', state)
-    })
   }
 
   toHTML() {
-    return createTable(10)
+    return createTable(10, this.store.getState())
+  }
+
+  onInput = e => {
+    this.updateTextInStore($(e.target).text())
   }
 }
 

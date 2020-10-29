@@ -3,14 +3,14 @@ import {$} from '@core/dom';
 export default function resizeHandler($root, event) {
   return new Promise( resolve => {
     const $resizer = $(event.target)
-    const resizeType = $resizer.data.resize
+    const type = $resizer.data.resize
     const $resizable = $resizer.closest('[data-type=resizable]')
     const coords = $resizable.getCoords()
     let mousemoveHandler = null
     let resizerOffset = null
     let mouseupHandler = null
 
-    if (resizeType === 'col') {
+    if (type === 'col') {
       let changeCol = null
       $resizer.$el.classList.add('col-resize-active')
       changeCol = $resizable.data.col
@@ -33,12 +33,13 @@ export default function resizeHandler($root, event) {
         $resizer.$el.classList.remove('col-resize-active', 'row-resize-active')
         resolve({
           value,
-          id: $resizable.data.col
+          id: $resizable.data[type],
+          type
         })
         document.onmousemove = null
         document.onmouseup = null
       }
-    } else if (resizeType === 'row') {
+    } else if (type === 'row') {
       $resizer.$el.classList.add('row-resize-active')
       mousemoveHandler = e => {
         resizerOffset = coords.bottom - e.pageY
@@ -49,7 +50,7 @@ export default function resizeHandler($root, event) {
       mouseupHandler = e => {
         const value = (resizerOffset * -1) + coords.height
         $resizable.css({
-          height: `${value}px`
+          'min-height': `${value}px`
         })
         $resizer.css({
           bottom: '0px'
@@ -57,7 +58,8 @@ export default function resizeHandler($root, event) {
         $resizer.$el.classList.remove('col-resize-active', 'row-resize-active')
         resolve({
           value,
-          id: null
+          id: $resizable.data[type],
+          type
         })
         document.onmousemove = null
         document.onmouseup = null
