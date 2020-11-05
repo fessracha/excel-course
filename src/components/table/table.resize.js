@@ -1,58 +1,54 @@
-import {$} from '@core/dom';
+import {$} from '@core/dom'
 
-export default function resizeHandler($root, event) {
-  const $resizer = $(event.target)
-  const resizeType = $resizer.data.resize
-  const $resizable = $resizer.closest('[data-type=resizable]')
-  const coords = $resizable.getCoords()
-  let mousemoveHandler = null
-  let resizerOffset = null
-  let mouseupHandler = null
+export function resizeHandler($root, event) {
+  return new Promise(resolve => {
+    const $resizer = $(event.target)
+    const $parent = $resizer.closest('[data-type="resizable"]')
+    const coords = $parent.getCoords()
+    const type = $resizer.data.resize
+    const sideProp = type === 'col' ? 'bottom' : 'right'
+    let value
 
-  if (resizeType === 'col') {
-    let changeCol = null
-    $resizer.$el.classList.add('col-resize-active')
-    changeCol = $resizable.data.col
-    mousemoveHandler = e => {
-      resizerOffset = coords.right - e.pageX
-      $resizer.css({
-        right: `${resizerOffset}px`
-      })
+    $resizer.css({
+      opacity: 1,
+      [sideProp]: '-5000px'
+    })
+
+    document.onmousemove = e => {
+      if (type === 'col') {
+        const delta = e.pageX - coords.right
+        value = coords.width + delta
+        $resizer.css({right: -delta + 'px'})
+      } else {
+        const delta = e.pageY - coords.bottom
+        value = coords.height + delta
+        $resizer.css({bottom: -delta + 'px'})
+      }
     }
-    mouseupHandler = () => {
-      const $cells = $root.findAll(`[data-col="${changeCol}"]`)
-      $cells.forEach($cell => {
-        $cell = $($cell)
-        $cell.css({
-          width: `${(resizerOffset * -1) + coords.width}px`
-        })
-      })
-      $resizer.css({right: '0px'})
-      $resizer.$el.classList.remove('col-resize-active', 'row-resize-active')
+
+    document.onmouseup = () => {
       document.onmousemove = null
       document.onmouseup = null
-    }
-  } else if (resizeType === 'row') {
-    $resizer.$el.classList.add('row-resize-active')
-    mousemoveHandler = e => {
-      resizerOffset = coords.bottom - e.pageY
-      $resizer.css({
-        bottom: `${resizerOffset}px`
-      })
-    }
-    mouseupHandler = e => {
-      $resizable.css({
-        height: `${(resizerOffset * -1) + coords.height}px`
-      })
-      $resizer.css({
-        bottom: '0px'
-      })
-      $resizer.$el.classList.remove('col-resize-active', 'row-resize-active')
-      document.onmousemove = null
-      document.onmouseup = null
-    }
-  }
 
-  document.onmousemove = mousemoveHandler
-  document.onmouseup = mouseupHandler
+      if (type === 'col') {
+        $parent.css({width: value + 'px'})
+        $root.findAll(`[data-col="${$parent.data.col}"]`)
+            .forEach(el => el.style.width = value + 'px')
+      } else {
+        $parent.css({height: value + 'px'})
+      }
+
+      resolve({
+        value,
+        type,
+        id: $parent.data[type]
+      })
+
+      $resizer.css({
+        opacity: 0,
+        bottom: 0,
+        right: 0
+      })
+    }
+  })
 }
