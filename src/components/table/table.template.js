@@ -1,69 +1,73 @@
+import {toInlineStyles} from '@core/utils'
+import {defaultStyles} from '@/constants'
+import {parse} from '@core/parse';
+
 const CODES = {
   A: 65,
   Z: 90
 }
-const DEFAULT_COL_WIDTH = 120
-const DEFAULT_ROW_HEIGHT = 20
 
-function toCell(row, state) {
-  return (_, col) => {
+const DEFAULT_WIDTH = 120
+const DEFAULT_HEIGHT = 24
+
+function getWidth(state, index) {
+  return (state[index] || DEFAULT_WIDTH) + 'px'
+}
+
+function getHeight(state, index) {
+  return (state[index] || DEFAULT_HEIGHT) + 'px'
+}
+
+function toCell(state, row) {
+  return function(_, col) {
+    const id = `${row}:${col}`
     const width = getWidth(state.colState, col)
-    const content = getContent(state.dataState, row, col)
+    const data = state.dataState[id]
+    const styles = toInlineStyles({
+      ...defaultStyles,
+      ...state.stylesState[id]
+    })
     return `
       <div 
         class="cell" 
-        contenteditable
+        contenteditable 
         data-col="${col}"
         data-type="cell"
-        data-id="${row}:${col}"
-        style="width: ${width}">
-        ${content}
-      </div>
+        data-id="${id}"
+        data-value="${data || ''}"
+        style="${styles}; width: ${width}"
+      >${parse(data) || ''}</div>
     `
   }
 }
 
-function getWidth(state = [], idx) {
-  return state[idx] ? `${state[idx]}px` : `${DEFAULT_COL_WIDTH}px`
-}
-
-function getHeight(state = [], idx) {
-  return state[idx] ? `${state[idx]}px` : `${DEFAULT_ROW_HEIGHT}px`
-}
-
-function getContent(state, row, col) {
-  return state[`${row}:${col}`] ? state[`${row}:${col}`] : ''
-}
-
-function withWidthFrom(state) {
-  return (col, idx) => {
-    return {col, idx, width: getWidth(state.colState, idx)}
-  }
-}
-
-function toColumn({col, idx, width}) {
+function toColumn({col, index, width}) {
   return `
-    <div class="column" 
-         data-type="resizable" 
-         data-col="${idx}"
-         style="width: ${width}">
-        ${col}
-        <div class="col-resize" data-resize="col"></div>
+    <div 
+      class="column" 
+      data-type="resizable" 
+      data-col="${index}" 
+      style="width: ${width}"
+    >
+      ${col}
+      <div class="col-resize" data-resize="col"></div>
     </div>
   `
 }
 
-function createRow(index, content, state) {
-  const height = getHeight(state.rowState, index)
-  const resizer = index
-    ? '<div class="row-resize" data-resize="row"></div>'
-    : ''
+function createRow(index, content, state = {}) {
+  const resize = index ? '<div class="row-resize" data-resize="row"></div>' : ''
+  const height = getHeight(state, index)
   return `
-    <div class="row" data-type="resizable" data-row="${index}" 
-        style="min-height: ${height}">
+    <div 
+      class="row" 
+      data-type="resizable" 
+      data-row="${index}"
+      style="height: ${height}"
+    >
       <div class="row-info">
-          ${index ? index : ''}
-          ${resizer}
+        ${index ? index : ''}
+        ${resize}
       </div>
       <div class="row-data">${content}</div>
     </div>
@@ -74,8 +78,16 @@ function toChar(_, index) {
   return String.fromCharCode(CODES.A + index)
 }
 
-export function createTable(rowsCount = 15, state) {
-  const colsCount = CODES.Z - CODES.A + 1
+function withWidthFrom(state) {
+  return function(col, index) {
+    return {
+      col, index, width: getWidth(state.colState, index)
+    }
+  }
+}
+
+export function createTable(rowsCount = 15, state = {}) {
+  const colsCount = CODES.Z - CODES.A + 1 // Compute cols count
   const rows = []
 
   const cols = new Array(colsCount)
@@ -85,15 +97,15 @@ export function createTable(rowsCount = 15, state) {
       .map(toColumn)
       .join('')
 
-  rows.push(createRow(0, cols, {}))
+  rows.push(createRow(null, cols))
 
   for (let row = 0; row < rowsCount; row++) {
     const cells = new Array(colsCount)
         .fill('')
-        .map(toCell(row, state))
+        .map(toCell(state, row))
         .join('')
 
-    rows.push(createRow(row + 1, cells, state))
+    rows.push(createRow(row + 1, cells, state.rowState))
   }
 
   return rows.join('')

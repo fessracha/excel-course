@@ -1,5 +1,3 @@
-import {$} from '@core/dom'
-
 export class TableSelection {
   static className = 'selected'
 
@@ -8,32 +6,30 @@ export class TableSelection {
     this.current = null
   }
 
-  clearSelected() {
-    this.group.forEach($item => $item.removeClass(TableSelection.className))
+  select($el) {
+    this.clear()
+    $el.focus().addClass(TableSelection.className)
+    this.group.push($el)
+    this.current = $el
+  }
+
+  clear() {
+    this.group.forEach($el => $el.removeClass(TableSelection.className))
     this.group = []
   }
 
-  select($el) {
-    this.clearSelected()
-    this.group.push($el)
-    this.current = $el
-    $el.focus().addClass(TableSelection.className)
+  get selectedIds() {
+    return this.group.map($el => $el.id())
   }
 
-  selectGroup($to) {
-    const rowMin = Math.min(this.current.id(true).row, $to.id(true).row)
-    const rowMax = Math.max(this.current.id(true).row, $to.id(true).row)
-    const colMin = Math.min(this.current.id(true).col, $to.id(true).col)
-    const colMax = Math.max(this.current.id(true).col, $to.id(true).col)
+  selectGroup($group = []) {
+    this.clear()
 
-    this.clearSelected()
+    this.group = $group
+    this.group.forEach($el => $el.addClass(TableSelection.className))
+  }
 
-    for (let i = rowMin; i <= rowMax; i++) {
-      for (let j = colMin; j <= colMax; j++) {
-        const $el = $(`[data-id="${i}:${j}"]`)
-        $el.addClass(TableSelection.className)
-        this.group.push($el)
-      }
-    }
+  applyStyle(style) {
+    this.group.forEach($el => $el.css(style))
   }
 }
