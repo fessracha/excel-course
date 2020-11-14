@@ -1,6 +1,5 @@
-import {$} from '@core/dom';
-import {ErrorPage} from '@/pages/ErrorPage';
-import ActiveRoute from '@core/routes/ActiveRoute';
+import {$} from '@core/dom'
+import {ActiveRoute} from '@core/routes/ActiveRoute'
 
 export class Router {
   constructor(selector, routes) {
@@ -10,9 +9,11 @@ export class Router {
 
     this.$placeholder = $(selector)
     this.routes = routes
+
     this.page = null
 
     this.changePageHandler = this.changePageHandler.bind(this)
+
     this.init()
   }
 
@@ -22,18 +23,20 @@ export class Router {
   }
 
   changePageHandler() {
-    if (this.page) this.page.destroy()
-    let Page = null
-    if (ActiveRoute.path.includes('excel')) {
-      Page = this.routes.excel
-    } else if (ActiveRoute.path.includes('dashboard')) {
-      Page = this.routes.dashboard
-    } else {
-      Page = ErrorPage
+    if (this.page) {
+      this.page.destroy()
     }
 
-    this.page = new Page()
-    this.$placeholder.clear().append(this.page.getRoot())
+    this.$placeholder.clear()
+
+    const Page = ActiveRoute.path.includes('excel')
+      ? this.routes.excel
+      : this.routes.dashboard
+
+    this.page = new Page(ActiveRoute.param)
+
+    this.$placeholder.append(this.page.getRoot())
+
     this.page.afterRender()
   }
 

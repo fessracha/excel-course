@@ -1,14 +1,21 @@
-function toHtml() {
+import {storage} from '@core/utils';
+
+function toHTML(key) {
+  const model = storage(key)
+  const id = Number(key.split(':')[1])
+  // const date = new Date(parseDate)
+  // const formatDate =
+  //   `${date.getDate()}.${date.getMonth() + 1}.${date.getFullYear()}`
   return `
     <li class="db__record">
-      <a href="#">Таблица номер 1</a>
-      <strong>12.06.2020</strong>
+      <a href="#excel/${id}">${model.title}</a>
+      <strong>date</strong>
     </li>
   `
 }
-// excel:123213
+
 function getAllKeys() {
-  const keys =[]
+  const keys = []
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i)
     if (!key.includes('excel')) {
@@ -19,12 +26,9 @@ function getAllKeys() {
   return keys
 }
 
-export function getAllRecords() {
-
-}
-
 export function createRecordsTable() {
   const keys = getAllKeys()
+
   if (!keys.length) {
     return `<p>Вы пока не создали ни одной таблицы</p>`
   }
@@ -34,8 +38,10 @@ export function createRecordsTable() {
       <span>Название</span>
       <span>Дата открытия</span>
     </div>
+
     <ul class="db__list">
-        ${keys.map(toHtml).join('')}
+      ${keys.map(toHTML).join('')}
     </ul>
   `
 }
+
