@@ -1,6 +1,11 @@
 export function parse(value = '') {
   if (value.startsWith('=')) {
-    return eval(value.slice(1))
+    try {
+      return eval(value.slice(1))
+    } catch (e) {
+      return value
+    }
   }
   return value
 }
+
