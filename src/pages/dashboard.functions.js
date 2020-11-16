@@ -3,13 +3,13 @@ import {storage} from '@core/utils';
 function toHTML(key) {
   const model = storage(key)
   const id = Number(key.split(':')[1])
-  // const date = new Date(parseDate)
-  // const formatDate =
-  //   `${date.getDate()}.${date.getMonth() + 1}.${date.getFullYear()}`
   return `
     <li class="db__record">
       <a href="#excel/${id}">${model.title}</a>
-      <strong>date</strong>
+      <strong>
+           ${new Date(model.openedDate).toLocaleDateString()}
+           ${new Date(model.openedDate).toLocaleTimeString()}
+       </strong>
     </li>
   `
 }
